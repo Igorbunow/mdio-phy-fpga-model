@@ -1,0 +1,105 @@
+# apt-get install doxygen graphviz perl git plantuml
+# ---------------- БАЗОВЫЕ НАСТРОЙКИ ----------------
+
+PROJECT_NAME           = "MDIO PHY Combined Model"
+PROJECT_BRIEF          = "SystemVerilog MDIO PHY behavioral model with Clause 22 / Clause 45 support and self-checking testbench"
+OUTPUT_DIRECTORY       = docgen
+
+# Сканируем только текущий каталог (можно поставить YES, если будут подпапки)
+RECURSIVE              = YES
+
+# Входные файлы — твоя модель и testbench
+INPUT                  = mdio_phy_combined_model.sv \
+                         iverilog/testbench/mdio_phy_combined_model_tb.sv \
+                         docs/mainpage.md \
+                         docs/mdio_fsm.md \
+                         docs/mdio_arch.md
+
+DOTFILE_DIRS = docs
+
+# Doxygen по умолчанию не знает .sv, но пусть считает их C++ для парсинга
+FILE_PATTERNS          = *.sv *.svh *.md
+EXTENSION_MAPPING      = sv=C++ svh=C++
+
+ENABLE_PREPROCESSING   = NO
+MACRO_EXPANSION        = NO
+EXPAND_ONLY_PREDEF     = NO
+SEARCH_INCLUDES        = NO
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+
+FILTER_SOURCE_FILES    = NO
+
+
+# Чтобы вытащить всё, даже без комментариев (для начала удобно)
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+# Включить HTML-документацию
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+
+# Источник в браузере, полезно для RTL
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+VERBATIM_HEADERS       = YES
+
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+USE_MDFILE_AS_MAINPAGE = docs/mainpage.md
+
+# ---------------- ФИЛЬТР ДЛЯ SYSTEMVERILOG ----------------
+
+# Используем входной фильтр на все файлы
+# ВАЖНО: путь до скрипта укажи абсолютный или относительный от корня проекта
+INPUT_FILTER = "tools/sv_filter.sh"
+
+
+# Если хочешь фильтровать только *.sv/ *.svh, можно вместо INPUT_FILTER использовать FILTER_PATTERNS:
+# FILTER_PATTERNS      = *.sv="perl tools/DoxygenFilterSystemVerilog/filter/idv_doxyfilter_sv.pl" \
+#                        *.svh="perl tools/DoxygenFilterSystemVerilog/filter/idv_doxyfilter_sv.pl"
+
+# ---------------- ДИАГРАММЫ И ГРАФЫ ----------------
+
+# Нужен установленный Graphviz (dot)
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+DOT_GRAPH_MAX_NODES    = 1000
+DOT_TRANSPARENT        = YES
+
+# UML-подобные диаграммы "классов" (у нас это будут модули/классы, как их увидит фильтр)
+CLASS_DIAGRAMS         = YES
+UML_LOOK               = YES
+UML_LIMIT_NUM_FIELDS   = 100
+PLANTUML_JAR_PATH  = /usr/share/plantuml/plantuml.jar
+
+
+# Графы использования и вызовов (для SV это будет частично работать там,
+# где фильтр превращает методы/функции в C++ методы)
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+
+# Графы связей между сущностями
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+DIRECTORY_GRAPH        = YES
+DOT_MULTI_TARGETS      = YES
+
+# ---------------- СВЯЗИ ВНУТРИ КОДА ----------------
+
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+SHOW_USED_FILES        = YES
+SHOW_INCLUDE_FILES     = YES
+
+# ---------------- ПРОЧЕЕ ПОД C++-ПОДОБНЫЙ ВЫХОД ----------------
+
+OPTIMIZE_OUTPUT_FOR_C  = YES
+JAVADOC_AUTOBRIEF      = YES
+
+# Можно включить предупреждения, чтобы поймать странности фильтра
+WARN_IF_UNDOCUMENTED   = NO
+WARNINGS               = YES

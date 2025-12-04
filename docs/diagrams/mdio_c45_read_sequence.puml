@@ -1,0 +1,73 @@
+@startuml MDIO_C45_Read_Sequence
+title Clause 45 Read Transaction - Address + Data Phases
+
+actor "MDIO Master" as M
+participant "MDIO PHY Top" as PHY
+participant "CDC & Edge Detector" as CDC
+participant "Frame Decoder FSM" as FSM
+participant "C45 Engine" as C45
+participant "Register Files" as REG
+participant "MDIO Line Driver" as DRV
+
+== Address Phase (OP = 00) ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(00), OP(00), PHYAD, DEVAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C45 ADDRESS\n(valid ST/OP/PHY/DEV)
+
+M -> PHY: TA(10) (master-driven)
+M -> PHY: REGADDR[15:0] (MSB first)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: address bits to FSM
+
+FSM -> C45: C45_ADDR(PHYAD, DEVAD, REGADDR)
+C45 --> FSM: addr_latched
+
+== Data Phase - Read (OP = 11) ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(00), OP(11), same PHYAD, same DEVAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C45 READ\n(valid ST/OP/PHY/DEV)
+
+== Register Read ==
+
+FSM -> C45: C45_READ(PHYAD, DEVAD, REGADDR)
+C45 -> REG: read_reg(DEVAD, REGADDR)
+REG --> C45: data[15:0]
+C45 --> FSM: data[15:0], respond_read=1
+
+== TA and Data Driven by PHY ==
+
+M -> PHY: release MDIO (Z) for TA
+FSM -> DRV: enable TA + data phase
+DRV -> PHY: mdio_oe=1
+
+note right of DRV
+  Read TA:
+   - 1st bit: Z  (master release)
+   - 2nd bit: 0  (PHY drives)
+  Data bits updated on MDC falling edge,
+  sampled by master on MDC rising edge.
+end note
+
+loop 16 bits
+    FSM -> DRV: shift next data bit (D15..D0)
+    DRV -> PHY: mdio_o = bit
+end
+
+== Completion ==
+
+FSM -> DRV: deassert respond_read\nmdio_oe = 0 (high-Z)
+FSM -> FSM: return to IDLE
+
+@enduml

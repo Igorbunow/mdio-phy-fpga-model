@@ -1,0 +1,69 @@
+@startuml MDIO_C45_Write_Sequence
+title Clause 45 Write Transaction - Address + Write Data
+
+actor "MDIO Master" as M
+participant "MDIO PHY Top" as PHY
+participant "CDC & Edge Detector" as CDC
+participant "Frame Decoder FSM" as FSM
+participant "C45 Engine" as C45
+participant "Register Files" as REG
+participant "MDIO Line Driver" as DRV
+
+== Address Phase (OP = 00) ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(00), OP(00), PHYAD, DEVAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C45 ADDRESS\n(valid ST/OP/PHY/DEV)
+
+M -> PHY: TA(10) (master-driven)
+M -> PHY: REGADDR[15:0] (MSB first)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: address bits to FSM
+
+FSM -> C45: C45_ADDR(PHYAD, DEVAD, REGADDR)
+C45 --> FSM: addr_latched
+
+== Data Phase - Write (OP = 01) ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(00), OP(01), same PHYAD, same DEVAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C45 WRITE\n(valid ST/OP/PHY/DEV)
+
+== TA and Data (Master Driven) ==
+
+M -> PHY: TA(10) (master drives)
+note right of M
+  For Clause-45 WRITE:
+   - TA = '10' driven by master
+   - PHY never drives MDIO
+end note
+
+loop 16 bits
+    M -> PHY: D15..D0 (MSB first)\nmdio_i driven by master
+    PHY -> CDC: sample mdc, mdio_i
+    CDC -> FSM: data bits to FSM
+end
+
+== Register Write ==
+
+FSM -> C45: C45_WRITE(PHYAD, DEVAD, REGADDR, data[15:0])
+C45 -> REG: write_reg(DEVAD, REGADDR, data)
+REG --> C45: ack
+C45 --> FSM: write_done
+
+== Completion ==
+
+FSM -> DRV: mdio_oe remains 0\n(PHY stays high-Z)
+FSM -> FSM: return to IDLE
+
+@enduml

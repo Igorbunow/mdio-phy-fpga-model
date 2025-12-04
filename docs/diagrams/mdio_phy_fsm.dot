@@ -1,0 +1,49 @@
+digraph MDIO_PHY_FSM {
+    rankdir=LR;
+    node [shape=circle, fontsize=10];
+
+    IDLE       [label="IDLE\n(wait preamble)"];
+    PREAMBLE   [label="PREAMBLE\n(count '1' bits)"];
+    ST         [label="ST\n(start-of-frame"];
+    OP         [label="OP\n(read/write kind"];
+    PHY_ADDR   [label="PHY_ADDR\n(5-bit PHYAD)"];
+    REG_DEV    [label="REG/DEV\n(RREG / DEVAD)"];
+    TA         [label="TA\n(turn-around)"];
+    DATA       [label="DATA\n(16-bit data)"];
+    DONE       [label="DONE\n(finalize, stats)"];
+    ERROR      [label="ERROR\n(invalid frame)"];
+
+    // IDLE and PREAMBLE
+    IDLE -> PREAMBLE   [label="detected '1' on mdio_i"];
+    PREAMBLE -> PREAMBLE [label="mdio_i == '1'\n< 32 bits"];
+    PREAMBLE -> ST     [label="32+ bits of '1'"];
+
+    // ST & OP
+    ST -> ERROR        [label="ST != 01 or 00"];
+    ST -> OP           [label="valid ST"];
+    OP -> ERROR        [label="invalid OP"];
+    OP -> PHY_ADDR     [label="valid OP"];
+
+    // PHY address phase
+    PHY_ADDR -> ERROR  [label="bad PHYAD\n(no matching PHY)"];
+    PHY_ADDR -> REG_DEV[label="valid PHYAD"];
+
+    // REG/DEV phase
+    REG_DEV -> ERROR   [label="C45 & invalid DEVAD"];
+    REG_DEV -> TA      [label="C22: REGAD latched\nC45: DEV/REG latched"];
+
+    // TA phase
+    TA -> ERROR        [label="short preamble,\ninvalid ST, bad PHY/DEV"];
+    TA -> DATA         [label="C22/C45 read\n(Z, then 0)"];
+    TA -> DATA         [label="C22/C45 write\n(10 from master)"];
+
+    // DATA phase
+    DATA -> DONE       [label="16 bits done\nread/write complete"];
+
+    // DONE and ERROR
+    DONE -> IDLE       [label="return to idle"];
+    ERROR -> IDLE      [label="discard frame"];
+
+    // Styling
+    IDLE [shape=doublecircle];
+}

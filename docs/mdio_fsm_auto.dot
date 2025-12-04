@@ -1,0 +1,13 @@
+digraph MDIO_FSM_AUTO {
+  rankdir=TB;
+  node [shape=ellipse];
+  S_DATA -> S_IDLE;
+  S_IDLE -> S_ST;
+  S_OP -> S_IDLE;
+  S_OP -> S_PHYAD;
+  S_PHYAD -> S_REG_DEVAD;
+  S_REG_DEVAD -> S_TA;
+  S_ST -> S_IDLE;
+  S_ST -> S_OP;
+  S_TA -> S_DATA;
+}

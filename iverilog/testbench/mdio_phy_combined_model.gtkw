@@ -1,0 +1,26 @@
+[*]
+[*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
+[*] Tue Dec  2 21:17:48 2025
+[*]
+[dumpfile] "/var/storage/Data/PROJECTS/UWBTEST_LIB/MDIO_slave/iverilog/simulation/mdio_phy_combined_model.vcd"
+[dumpfile_mtime] "Tue Dec  2 21:17:27 2025"
+[dumpfile_size] 504200
+[savefile] "/var/storage/Data/PROJECTS/UWBTEST_LIB/MDIO_slave/iverilog/testbench/mdio_phy_combined_model.gtkw"
+[timestart] 531100
+[size] 2832 1225
+[pos] 803 152
+*-15.000000 657000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] mdio_phy_combined_model_tb.
+[sst_width] 467
+[signals_width] 377
+[sst_expanded] 1
+[sst_vpaned_height] 447
+@28
+mdio_phy_combined_model_tb.dut.clk_sys
+mdio_phy_combined_model_tb.dut.rst_n
+mdio_phy_combined_model_tb.dut.mdc
+mdio_phy_combined_model_tb.dut.mdio_i
+mdio_phy_combined_model_tb.dut.mdio_o
+mdio_phy_combined_model_tb.dut.mdio_oe
+[pattern_trace] 1
+[pattern_trace] 0

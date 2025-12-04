@@ -1,0 +1,51 @@
+@startuml MDIO_C22_Read_Sequence
+title Clause 22 Read Transaction - Sequence Diagram
+
+actor "MDIO Master" as M
+participant "MDIO PHY Top" as PHY
+participant "CDC & Edge Detector" as CDC
+participant "Frame Decoder FSM" as FSM
+participant "C22 Engine" as C22
+participant "Register Files" as REG
+participant "MDIO Line Driver" as DRV
+
+== Preamble & Header ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(01), OP(10), PHYAD, REGAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C22 READ\n(valid ST/OP/PHY/REG)
+
+== Register Access ==
+
+FSM -> C22: C22_READ(PHYAD, REGAD)
+C22 -> REG: read_reg(addr)
+REG --> C22: data[15:0]
+C22 --> FSM: data[15:0], respond_read=1
+
+== TA Phase and Data ==
+
+M -> PHY: release MDIO (Z) for TA
+FSM -> DRV: enable TA phase
+DRV -> PHY: mdio_oe=1\n(first TA bit = Z,\nsecond TA bit = 0)
+
+loop 16 bits
+    FSM -> DRV: shift next data bit (D15..D0)
+    DRV -> PHY: mdio_o = bit
+    note right of DRV
+        Data updated on MDC falling edge
+        Sampled by master on MDC rising edge
+    end note
+end
+
+== Completion ==
+
+FSM -> DRV: deassert respond_read
+DRV -> PHY: mdio_oe=0 (MDIO high-Z)
+FSM -> FSM: return to IDLE
+
+@enduml

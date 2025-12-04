@@ -1,0 +1,44 @@
+# Temporary files
+*~
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Debug files
+*.d
+*.s
+*.ii
+*.log
+
+# Binary exec
+*.elf
+*.bit
+*.vcd
+
+#temp
+*.swp
+
+*.ivl
+
+#simulation results and temps
+*.vvp
+*.vcd
+
+#netlists
+*.edif
+*.edf
+
+# next line contains vscode settings for simulation, please stay comented
+#.vscode
+simulation
+vivado.jou

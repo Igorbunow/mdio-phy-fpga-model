@@ -1,0 +1,41 @@
+@startuml MDIO_PHY_Architecture
+title MDIO PHY Combined Model - High-Level Architecture
+
+skinparam componentStyle rectangle
+
+package "MDIO PHY Combined Model" {
+    [MDIO PHY Top] as Top
+
+    component "CDC & Edge Detector" as CDC
+    component "Frame Decoder FSM" as FSM
+    component "C22 Engine" as C22
+    component "C45 Engine" as C45
+    component "Register Files\n(C22, C45-PMA, C45-PCS, C45-AN, DEV31)" as REG
+    component "Link/Speed & AN Logic" as LINK
+    component "MDIO Line Driver\n(mdio_o, mdio_oe)" as DRIVER
+}
+
+package "MDIO Master / Environment" {
+    [MDIO Master] as MASTER
+    [System Clock Domain] as CLK
+}
+
+MASTER -down-> Top : mdc, mdio_i
+Top -down-> MASTER : mdio_o (via tri-state), mdio_oe
+CLK -right-> Top : clk_sys, rst_n
+
+Top --> CDC
+CDC --> FSM
+
+FSM --> C22 : C22 frames\n(ST=01)
+FSM --> C45 : C45 frames\n(ST=00)
+
+C22 <--> REG : C22 register access
+C45 <--> REG : C45 register access\n(PMA/PCS/AN/DEV31)
+
+REG <--> LINK : link_up, link_speed,\nAN/EEE capabilities
+
+FSM --> DRIVER : respond_read,\nTA phase control
+DRIVER --> Top : mdio_o, mdio_oe
+
+@enduml

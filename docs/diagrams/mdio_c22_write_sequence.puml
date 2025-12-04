@@ -1,0 +1,51 @@
+@startuml MDIO_C22_Write_Sequence
+title Clause 22 Write Transaction - Sequence Diagram
+
+actor "MDIO Master" as M
+participant "MDIO PHY Top" as PHY
+participant "CDC & Edge Detector" as CDC
+participant "Frame Decoder FSM" as FSM
+participant "C22 Engine" as C22
+participant "Register Files" as REG
+participant "MDIO Line Driver" as DRV
+
+== Preamble & Header ==
+
+M -> PHY: mdc, mdio_i (preamble '1' x32)
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: mdc_rise, mdio_i
+
+M -> PHY: ST(01), OP(01), PHYAD, REGAD
+PHY -> CDC: sample mdc, mdio_i
+CDC -> FSM: decoded bits
+FSM -> FSM: detect C22 WRITE\n(valid ST/OP/PHY/REG)
+
+== Turn-Around and Data (Master Driven) ==
+
+M -> PHY: TA(10)\n(master drives both bits)
+note right of M
+  For Clause-22 WRITE:
+  - TA = '10' is driven by the master
+  - PHY never drives MDIO during TA/data
+end note
+
+loop 16 bits
+    M -> PHY: D15..D0 (MSB first)\nmdio_i driven by master
+    PHY -> CDC: sample mdc, mdio_i
+    CDC -> FSM: data bits to FSM
+end
+
+== Register Write ==
+
+FSM -> C22: C22_WRITE(PHYAD, REGAD, data[15:0])
+C22 -> REG: write_reg(addr, data)
+REG --> C22: ack
+C22 --> FSM: write_done
+
+== Completion ==
+
+FSM -> FSM: update statistics / error counters
+FSM -> DRV: mdio_oe remains 0\n(PHY stays high-Z)
+FSM -> FSM: return to IDLE
+
+@enduml
