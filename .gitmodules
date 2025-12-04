@@ -1,0 +1,3 @@
+[submodule "tools/DoxygenFilterSystemVerilog"]
+	path = tools/DoxygenFilterSystemVerilog
+	url = git@github.com:Igorbunow/DoxygenFilterSystemVerilog.git
